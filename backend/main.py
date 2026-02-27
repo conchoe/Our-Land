@@ -68,35 +68,29 @@ async def process_doc(doc):
     )
 
 # --- 2. Now your routes can both use it ---
-
 @app.get("/api/search")
-async def search(q: str = "public land transfer", page: int = 1):
-    # ... (cache logic) ...
+async def search(q: str = "public land", mode: str = "recent", page: int = 1):
+    # 1. Determine if we are looking for significant items
+    is_significant = (mode == "significant")
     
-    raw_data = await search_documents(q, per_page=5, page=page)
+    # 2. Fetch from Federal Register
+
+    count = 50 if is_significant else 15 #number of docs to fetch
+    raw_data = await search_documents(q, per_page=count, page=page, significant=is_significant)
+    
     if not raw_data or "results" not in raw_data:
         return []
 
-    # This now works because process_doc is defined above!
+    # 3. Process
     tasks = [process_doc(doc) for doc in raw_data["results"]]
     policy_events = await asyncio.gather(*tasks)
 
-    # ... (save cache and return) ...
+    # 4. If mode is significant, we can do an extra sort by your AI impact_score
+    if is_significant:
+        policy_events.sort(key=lambda x: x.impact_score, reverse=True)
+        return policy_events[:10] # Return the top 10 heaviest hitters
+
     return policy_events
-
-@app.get("/api/top_impact")
-async def top_impact(q: str = "land disposal"):
-    raw_data = await search_documents(q, per_page=20) # Get more to find the best
-    
-    # This also works now!
-    tasks = [process_doc(doc) for doc in raw_data["results"]]
-    all_events = await asyncio.gather(*tasks)
-
-    # Sort by impact (High first, then Medium, then Low)
-    impact_order = {"high": 3, "medium": 2, "low": 1}
-    sorted_events = sorted(all_events, key=lambda x: impact_order.get(x.impact, 0), reverse=True)
-
-    return sorted_events[:10]
 
 @app.get("/api/health")
 async def health_check():

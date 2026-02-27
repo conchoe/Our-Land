@@ -1,0 +1,135 @@
+/* Variables from your palette */
+:root {
+    --azure-mist: #e6fafc;
+    --light-green: #9cfc97;
+    --sage-green: #6ba368;
+    --olive-leaf: #515b3a;
+    --charcoal-brown: #353d2f;
+    --white: #ffffff;
+}
+
+/* Base Styles */
+body {
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    font-family: 'Inter', -apple-system, sans-serif;
+    background-color: var(--azure-mist);
+    color: var(--charcoal-brown);
+}
+
+/* Sidebar - "The Field Guide" */
+#sidebar {
+    width: 380px;
+    background: var(--white);
+    border-right: 3px solid var(--olive-leaf);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 4px 0px 15px rgba(53, 61, 47, 0.1);
+    z-index: 10;
+}
+
+.sidebar-header {
+    padding: 25px;
+    background: var(--charcoal-brown);
+    color: var(--azure-mist);
+    border-bottom: 4px solid var(--sage-green);
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-family: 'Georgia', serif; /* Gives it a book/manual feel */
+    font-style: italic;
+    letter-spacing: 1px;
+}
+
+/* Search UI */
+.search-container {
+    padding: 20px;
+    background: var(--azure-mist);
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border: 2px solid var(--sage-green);
+    border-radius: 8px;
+    background: var(--white);
+    font-size: 14px;
+    color: var(--charcoal-brown);
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: var(--olive-leaf);
+    color: var(--light-green);
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background: var(--sage-green);
+    color: var(--white);
+    transform: translateY(-1px);
+}
+
+/* Results List */
+#results-list {
+    overflow-y: auto;
+    flex-grow: 1;
+    background: var(--white);
+}
+
+.result-item {
+    padding: 20px;
+    border-bottom: 1px solid var(--azure-mist);
+    cursor: pointer;
+    transition: 0.2s;
+    border-left: 5px solid transparent;
+}
+
+.result-item:hover {
+    background: var(--azure-mist);
+    border-left: 5px solid var(--sage-green);
+}
+
+/* Tags - The "Patagonia" Label Look */
+.tag {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 800;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.tag.mining { background: #d9480f; color: white; }
+.tag.logging { background: var(--sage-green); color: white; }
+.tag.land_transfer { background: var(--olive-leaf); color: var(--light-green); }
+.tag.other { background: var(--charcoal-brown); color: var(--azure-mist); }
+
+/* The Map */
+#map {
+    flex-grow: 1;
+}
+
+/* Custom Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+    background: var(--azure-mist);
+    color: var(--charcoal-brown);
+    border-radius: 0;
+    border: 2px solid var(--charcoal-brown);
+}
+
+.leaflet-popup-tip {
+    background: var(--charcoal-brown);
+}

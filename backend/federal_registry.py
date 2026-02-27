@@ -4,7 +4,7 @@ from datetime import datetime
 
 BASE_URL = "https://www.federalregister.gov/api/v1"
 
-async def search_documents(query: str, per_page: int = 20, page: int = 1):
+async def search_documents(query: str, per_page: int = 15, page: int = 1, significant = False):
     params = {
         "conditions[term]": query,
         "conditions[agencies][]": [
@@ -20,6 +20,10 @@ async def search_documents(query: str, per_page: int = 20, page: int = 1):
             "agencies", "full_text_xml_url", "html_url", "cfr_references"
         ]
     }
+    
+    if significant: #if user wants significant events 
+        params["conditions[significant]"] = 1
+        params["per_page"] = 50
     
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:
