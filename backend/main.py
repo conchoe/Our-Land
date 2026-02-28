@@ -6,12 +6,12 @@ from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
-from models import PolicyEvent, Coordinate
 
 # Import the functions we built in Phases 2 and 3
-from federal_registry import search_documents
-from openai_parser import extract_location_and_impact
-from geo import get_coordinates
+from .models import PolicyEvent, Coordinate
+from .federal_registry import search_documents
+from .openai_parser import extract_location_and_impact
+from .geo import get_coordinates
 
 load_dotenv()
 app = FastAPI()
