@@ -4,13 +4,16 @@ from datetime import datetime
 
 BASE_URL = "https://www.federalregister.gov/api/v1"
 
-async def search_documents(query: str, per_page: int = 15, page: int = 1, significant = False):
+async def search_documents(query: str, per_page: int = 10, page: int = 1, significant = False):
     params = {
         "conditions[term]": query,
         "conditions[agencies][]": [
-            "land-management-bureau",        # Corrected from bureau-of-land-management
-            "forest-service",                # This one was correct
-            "environmental-protection-agency" # This one was correct
+            "land-management-bureau",        
+            "forest-service",                
+            "environmental-protection-agency",
+             "national-park-service",
+             "fish-and-wildlife-service"
+
         ],
         "per_page": per_page,
         "page": page,
@@ -23,7 +26,6 @@ async def search_documents(query: str, per_page: int = 15, page: int = 1, signif
     
     if significant: #if user wants significant events 
         params["conditions[significant]"] = 1
-        params["per_page"] = 50
     
     async with httpx.AsyncClient(timeout=30.0) as client:
         try:

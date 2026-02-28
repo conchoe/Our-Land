@@ -47,6 +47,13 @@ async def process_doc(doc):
     # AI Analysis
     analysis = await extract_location_and_impact(doc['title'], doc.get('abstract', ""))
     
+    #get rid of meetings etc.
+    title = doc.get('title', "").lower()
+    skip_words = ["meeting", "agenda", "committee"]
+    for word in title:
+        if word in skip_words:
+            return None
+
     # Geocoding logic
     coords = []
     for loc in analysis.get("locations", []):
@@ -75,7 +82,7 @@ async def search(q: str = "public land", mode: str = "recent", page: int = 1):
     
     # 2. Fetch from Federal Register
 
-    count = 50 if is_significant else 15 #number of docs to fetch
+    count = 20 if is_significant else 10 #number of docs to fetch
     raw_data = await search_documents(q, per_page=count, page=page, significant=is_significant)
     
     if not raw_data or "results" not in raw_data:

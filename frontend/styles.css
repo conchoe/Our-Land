@@ -133,3 +133,8 @@ button:hover {
 .leaflet-popup-tip {
     background: var(--charcoal-brown);
 }
+
+/* This makes the "emptiness" outside the map match your color theme */
+.leaflet-container {
+    background: var(--azure-mist) !important;
+}
