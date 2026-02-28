@@ -66,7 +66,7 @@ async function handleSearch() {
     clearMarkers();
 
     try {
-        const response = await fetch(`http://127.0.0.1:8000/api/search?q=${encodeURIComponent(query)}&mode=${mode}`);
+        const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&mode=${mode}`);
         const data = await response.json();
 
         listContainer.innerHTML = "";
