@@ -1,5 +1,5 @@
 ##  Features I built
-- **The "Meeting Filter":** Built a custom Python logic gate to filter out administrative "chatter" (agencies' personnel nominations, board meetings), ensuring the map only shows physical impacts on the land.
+- **The "Meeting Filter":** Built a custom Python logic gate to filter out administrative "chatter" (agencies' personnel nominations, board meetings), ensuring the map only shows physical impacts on the land. (in process_doc function in main.py)
 - **"Patagonia" Aesthetic:** Custom-styled the map using a "Map Sandwich" technique—stacking Esri Shaded Relief for natural beauty and a transparent label layer for clarity. Color scheme from Coolors.
 - **Responsive Impact System:** Markers are color-coded and sized dynamically based on AI-calculated impact scores.
 
