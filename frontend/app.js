@@ -5,28 +5,36 @@ const usBounds = L.latLngBounds(
 );
 
 // 2. Define the base topo map
-const topoLayer = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles courtesy of the U.S. Geological Survey',
+// 1. The Bottom Layer: Natural Terrain (No labels)
+const terrainBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri',
+    maxZoom: 13,
     noWrap: true
 });
 
-// 3. Create the layer group for the green boundaries
+// 2. The Top Layer: Transparent State Borders & Names
+const stateLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Reference_Overlay/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Labels &copy; Esri',
+    opacity: 0.8, // Slightly faded so it doesn't distract from the land
+    noWrap: true
+});
+
 const landOverlay = L.layerGroup();
 
-// 4. Initialize the map
+// 3. Initialize the Map with BOTH layers
 const map = L.map('map', {
     center: [39.8283, -98.5795],
     zoom: 4,
     minZoom: 3,
     maxBounds: usBounds,
     maxBoundsViscosity: 0.8,
-    worldCopyJump: false,
-    layers: [topoLayer] // FIXED: Matches the variable name exactly
+    layers: [terrainBase, stateLabels] // This stacks them!
 });
 
-// 5. Add the Toggle Control
+// 4. Update your Toggle Control
 const overlays = {
-    "🌿 Public Land Boundaries": landOverlay
+    "🌿 Public Land Boundaries": landOverlay,
+    "📍 State Names & Borders": stateLabels // Now users can hide labels if they want!
 };
 L.control.layers(null, overlays).addTo(map);
 
@@ -62,18 +70,24 @@ async function handleSearch() {
         const data = await response.json();
 
         listContainer.innerHTML = "";
+        if (!response.ok || !Array.isArray(data)) {
+            listContainer.innerHTML = "<p style='padding:15px'>Error loading results.</p>";
+            return;
+        }
 
         data.forEach(event => {
-            // Standardize impact and category to lowercase for safe matching
             const impact = (event.impact || 'low').toLowerCase();
             const category = (event.category || 'other').toLowerCase();
+            const envEffect = (event.environment_effect || 'neutral').toLowerCase();
 
-            // 1. Create the Sidebar Item
+            const envLabel = envEffect === 'beneficial' ? '🌿 Beneficial' : envEffect === 'detrimental' ? '⚠️ Detrimental' : '— Neutral';
+            const envClass = envEffect === 'beneficial' ? 'env-beneficial' : envEffect === 'detrimental' ? 'env-detrimental' : 'env-neutral';
+
             const item = document.createElement('div');
             item.className = 'result-item';
-            // Ensure the tag class matches the category name exactly (lowercase)
             item.innerHTML = `
                 <span class="tag ${category}">${category.replace('_', ' ')}</span>
+                <span class="tag ${envClass}">${envLabel}</span>
                 <div style="font-weight:bold; margin-top:5px; font-size: 16px;">${event.title}</div>
                 <div style="font-size:12px; color:var(--sage-green); margin-top: 5px;">
                     📅 ${event.publication_date} | <strong>${impact.toUpperCase()} IMPACT</strong>
@@ -81,8 +95,9 @@ async function handleSearch() {
             `;
             listContainer.appendChild(item); // Add to sidebar immediately
 
-            // 2. Add Pins to Map
-            event.coordinates.forEach((coord, index) => {
+            // 2. Add Pins to Map (guard against missing coordinates)
+            const coords = event.coordinates || [];
+            coords.forEach((coord, index) => {
                 const marker = L.circleMarker([coord.lat, coord.lng], {
                     radius: impactSizes[impact] || 8,
                     fillColor: categoryColors[category] || "blue",
@@ -94,22 +109,25 @@ async function handleSearch() {
                 marker.bindPopup(`
                     <div style="border-bottom: 1px solid #ddd; margin-bottom:5px;">
                         <strong style="color:${impact === 'high' ? 'red' : 'black'};">${impact.toUpperCase()} IMPACT</strong>
+                        · <span style="color:${envEffect === 'beneficial' ? '#2d7d46' : envEffect === 'detrimental' ? '#c41e3a' : '#6c757d'}">${envLabel}</span>
                     </div>
                     <strong>${event.title}</strong><br>
                     <p>${event.summary}</p>
                     <a href="${event.federal_register_url}" target="_blank">View Document</a>
                 `);
 
-                // Fix: If it's the first coordinate, link it to the sidebar click
                 if (index === 0) {
                     item.onclick = () => {
                         map.setView([coord.lat, coord.lng], 7);
                         marker.openPopup();
                     };
                 }
-
                 markers.push(marker);
             });
+            // If no coordinates, clicking the item still focuses the map on US center
+            if (coords.length === 0) {
+                item.onclick = () => map.setView([39.8283, -98.5795], 4);
+            }
         });
     } catch (err) {
         console.error(err); // Log the actual error to the console
@@ -140,8 +158,8 @@ const agencyColors = {
 
 // 2. Function to style the polygons
 function styleLand(feature) {
-    // This assumes your GeoJSON has a property like 'AGENCY' or 'OWNER'
-    const agency = feature.properties.AGENCY || 'default';
+    // Since this dataset is for National Parks, we default the agency to 'NPS'
+    const agency = feature.properties.AGENCY || 'NPS';
     return {
         fillColor: agencyColors[agency] || agencyColors['default'],
         weight: 1,
@@ -158,7 +176,9 @@ fetch('nps_boundary.json') // You'll put your downloaded file here
         L.geoJSON(data, {
             style: styleLand,
             onEachFeature: function (feature, layer) {
-                layer.bindPopup(`<strong>${feature.properties.NAME}</strong><br>${feature.properties.AGENCY}`);
+                const parkName = feature.properties.UNIT_NAME || 'Unknown Area';
+                const parkType = feature.properties.UNIT_TYPE || 'National Park Service';
+                layer.bindPopup(`<strong>${parkName}</strong><br>${parkType}`);
             }
         }).addTo(landOverlay);
     });

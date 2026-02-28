@@ -17,3 +17,5 @@ class PolicyEvent(BaseModel):
     locations: List[str]
     coordinates: List[Coordinate]
     federal_register_url: str
+    environment_effect: str  # "beneficial", "detrimental", or "neutral" (fallback)
+    relevance_score: int  # 1-10, how well the document matches the user's search query

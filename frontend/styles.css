@@ -117,6 +117,12 @@ button:hover {
 .tag.land_transfer { background: var(--olive-leaf); color: var(--light-green); }
 .tag.other { background: var(--charcoal-brown); color: var(--azure-mist); }
 
+/* Environment effect (beneficial vs detrimental) */
+.tag.env-beneficial { background: #2d7d46; color: white; }
+.tag.env-detrimental { background: #c41e3a; color: white; }
+.tag.env-neutral { background: #6c757d; color: white; }
+.tag.tag-approx { background: #6c757d; color: white; font-style: italic; }
+
 /* The Map */
 #map {
     flex-grow: 1;

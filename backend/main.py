@@ -43,15 +43,17 @@ cache = {}
 CACHE_EXPIRATION = 3600  # 1 hour in seconds
 
 # --- 1. Move this OUTSIDE and make it a standalone function ---
-async def process_doc(doc):
-    # AI Analysis
-    analysis = await extract_location_and_impact(doc['title'], doc.get('abstract', ""))
+async def process_doc(doc, query: str = ""):
+    # AI Analysis (pass query so the model can score relevance)
+    analysis = await extract_location_and_impact(
+        doc['title'], doc.get('abstract', ""), search_query=query
+    )
     
     #get rid of meetings etc.
     title = doc.get('title', "").lower()
-    skip_words = ["meeting", "agenda", "committee"]
-    for word in title:
-        if word in skip_words:
+    skip_words = ["administrative", "agenda", "committee", "nomination", "personnel"]
+    for word in skip_words:
+        if word in title:
             return None
 
     # Geocoding logic
@@ -71,32 +73,43 @@ async def process_doc(doc):
         publication_date=doc['publication_date'],
         locations=analysis.get("locations", []),
         coordinates=coords,
-        federal_register_url=doc['html_url']
+        federal_register_url=doc['html_url'],
+        environment_effect=analysis.get("environment_effect", "neutral"),
+        relevance_score=analysis.get("relevance_score", 5),
     )
 
 # --- 2. Now your routes can both use it ---
 @app.get("/api/search")
 async def search(q: str = "public land", mode: str = "recent", page: int = 1):
+    # 0. Return cached result if still valid (makes repeat searches instant)
+    cache_key = f"{q}|{mode}|{page}"
+    if cache_key in cache:
+        entry = cache[cache_key]
+        if (time.time() - entry["timestamp"]) < CACHE_EXPIRATION:
+            return entry["data"]
+
     # 1. Determine if we are looking for significant items
     is_significant = (mode == "significant")
     
     # 2. Fetch from Federal Register
-
-    count = 20 if is_significant else 10 #number of docs to fetch
+    count = 20 if is_significant else 10  # number of docs to fetch
     raw_data = await search_documents(q, per_page=count, page=page, significant=is_significant)
     
     if not raw_data or "results" not in raw_data:
         return []
 
-    # 3. Process
-    tasks = [process_doc(doc) for doc in raw_data["results"]]
-    policy_events = await asyncio.gather(*tasks)
+    # 3. Process (filter out None from skipped docs); pass query for relevance scoring
+    tasks = [process_doc(doc, q) for doc in raw_data["results"]]
+    results = await asyncio.gather(*tasks)
+    policy_events = [e for e in results if e is not None]
 
-    # 4. If mode is significant, we can do an extra sort by your AI impact_score
+    # 4. Re-rank by relevance to the search query (then impact as tiebreak)
+    policy_events.sort(key=lambda x: (x.relevance_score, x.impact_score), reverse=True)
     if is_significant:
-        policy_events.sort(key=lambda x: x.impact_score, reverse=True)
-        return policy_events[:10] # Return the top 10 heaviest hitters
+        policy_events = policy_events[:10]
 
+    # 5. Cache response for repeat searches
+    cache[cache_key] = {"timestamp": time.time(), "data": [e.model_dump() for e in policy_events]}
     return policy_events
 
 @app.get("/api/health")
