@@ -7,7 +7,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# Import the functions we built in Phases 2 and 3
 from .models import PolicyEvent, Coordinate
 from .federal_registry import search_documents
 from .openai_parser import extract_location_and_impact
@@ -16,21 +15,16 @@ from .geo import get_coordinates
 load_dotenv()
 app = FastAPI()
 
-# --- FIX 1 & 2: Correcting the static file path ---
 current_dir = os.path.dirname(os.path.realpath(__file__))
 # This looks for the 'frontend' folder sitting next to the 'backend' folder
 frontend_path = os.path.join(current_dir, "..", "frontend")
 
 app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
-# --- FIX 3: Handling the root URL ---
 @app.get("/")
 async def root():
     return RedirectResponse(url="/static/index.html")
 
-# ... rest of your /api/search routes below ...
-
-# Enable CORS so your frontend can talk to your backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,13 +36,13 @@ app.add_middleware(
 cache = {}
 CACHE_EXPIRATION = 3600  # 1 hour in seconds
 
-# --- 1. Move this OUTSIDE and make it a standalone function ---
 async def process_doc(doc, query: str = ""):
     # AI Analysis (pass query so the model can score relevance)
     analysis = await extract_location_and_impact(
         doc['title'], doc.get('abstract', ""), search_query=query
     )
     
+    #Mine
     #get rid of meetings etc.
     title = doc.get('title', "").lower()
     skip_words = ["administrative", "agenda", "committee", "nomination", "personnel"]
