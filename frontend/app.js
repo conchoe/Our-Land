@@ -33,8 +33,8 @@ const map = L.map('map', {
 
 // 4. Update your Toggle Control
 const overlays = {
-    "🌿 Public Land Boundaries": landOverlay,
-    "📍 State Names & Borders": stateLabels // Now users can hide labels if they want!
+    "Public Land Boundaries": landOverlay,
+    "State Names & Borders": stateLabels // Now users can hide labels if they want!
 };
 L.control.layers(null, overlays).addTo(map);
 
@@ -80,7 +80,7 @@ async function handleSearch() {
             const category = (event.category || 'other').toLowerCase();
             const envEffect = (event.environment_effect || 'neutral').toLowerCase();
 
-            const envLabel = envEffect === 'beneficial' ? '🌿 Beneficial' : envEffect === 'detrimental' ? '⚠️ Detrimental' : '— Neutral';
+            const envLabel = envEffect === 'beneficial' ? 'Beneficial' : envEffect === 'detrimental' ? 'Detrimental' : 'Neutral';
             const envClass = envEffect === 'beneficial' ? 'env-beneficial' : envEffect === 'detrimental' ? 'env-detrimental' : 'env-neutral';
 
             const item = document.createElement('div');
@@ -90,7 +90,7 @@ async function handleSearch() {
                 <span class="tag ${envClass}">${envLabel}</span>
                 <div style="font-weight:bold; margin-top:5px; font-size: 16px;">${event.title}</div>
                 <div style="font-size:12px; color:var(--sage-green); margin-top: 5px;">
-                    📅 ${event.publication_date} | <strong>${impact.toUpperCase()} IMPACT</strong>
+                    ${event.publication_date} | <strong>${impact.toUpperCase()} IMPACT</strong>
                 </div>
             `;
             listContainer.appendChild(item); // Add to sidebar immediately
